@@ -10,7 +10,7 @@ const useGetForecast = (selectedCity) => {
     const [data, setData] = useState([])
     const [retry, setRetry] = useState(0)
     
-    const getForecast = useCallback(async(selectedCity) => {
+    const $getForecast = useCallback(async(selectedCity) => {
         const { lat, long } = selectedCity;
         setFetching(true)
         if (!fetched) setFetched(true)
@@ -24,9 +24,9 @@ const useGetForecast = (selectedCity) => {
     useEffect(() => {
         if (selectedCity && (lastCity.current !== selectedCity.value || retry > 0)) {
             lastCity.current = selectedCity.value
-            getForecast(selectedCity)
+            $getForecast(selectedCity)
         }
-    }, [selectedCity, getForecast, retry])
+    }, [selectedCity, $getForecast, retry])
 
     const triggerRetry = () => setRetry((prev) => prev + 1)
 
