@@ -69,17 +69,19 @@ export const Forecast = () => {
     const loadOptions = async (city, callback) => {
         const $cities = await getCities(city)
 
+        console.log($cities)
         callback($cities
             .map(({
                 city_name,
                 country,
+                state,
                 id,
                 lat,
                 long
             }) => {
                 return {
                     value: id,
-                    label: `${city_name}, ${country}`,
+                    label: `${city_name}, ${state}, ${country}`,
                     lat,
                     long
 
