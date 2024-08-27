@@ -2,10 +2,25 @@
 
 ## Instalación
 
-Instala las dependencias:
+Sigue estos pasos para instalar y ejecutar el proyecto localmente:
 
-```bash
-npm install
+1. **Instalar dependencias:**
 
-```bash
-npm run dev
+    Ejecuta el siguiente comando para instalar todas las dependencias necesarias:
+
+   
+    ```console
+    npm install
+    ```
+
+2. **Iniciar el servidor de desarrollo:**
+
+    Una vez instaladas las dependencias, inicia el servidor de desarrollo con:
+
+    ```console
+    npm run dev
+    ```
+
+3. **Acceder a la aplicación:**
+
+    Abre tu navegador y visita http://localhost:5173/ para ver la aplicación en funcionamiento.
