@@ -1,8 +1,13 @@
+import { Forecast } from "./components/Forecast"
+
+
 function App() {
   return (
-    <>
-      <h1 className="text-lg font-bold">BASIC APP </h1>
-    </>
+    <div className="flex min-h-screen bg-gray-100 antialiased">
+      <div className="flex-1">
+        <Forecast />
+      </div>
+    </div>
   )
 }
 
