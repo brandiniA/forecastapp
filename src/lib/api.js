@@ -26,7 +26,6 @@ export const getForeCast = async({ lat, long }) => {
         const forecasts = (await res.json()).list;
     
         const dict = {}
-    
         forecasts.forEach(({ dt, main: { temp_min, temp_max } }) => {
             const date = dayjs.unix(dt)
             const day = dayjs.unix(dt).date()

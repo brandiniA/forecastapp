@@ -1,7 +1,42 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getCities, getForeCast } from '../../lib/api'
 import AsyncSelect from 'react-select/async';
 import GridLoader  from "react-spinners/GridLoader";
+
+const useGetForecast = (selectedCity) => {
+    const lastCity = useRef(null)
+    const [fetched, setFetched] = useState(false)
+    const [fetching, setFetching] = useState(false)
+    const [data, setData] = useState([])
+    const [retry, setRetry] = useState(0)
+    
+    const getForecast = useCallback(async(selectedCity) => {
+        const { lat, long } = selectedCity;
+        setFetching(true)
+        if (!fetched) setFetched(true)
+
+        setData([])
+        const $forecasts = await getForeCast({ lat, long })
+        setData($forecasts)
+        setFetching(false)
+    }, [fetched])
+
+    useEffect(() => {
+        if (selectedCity && (lastCity.current !== selectedCity.value || retry > 0)) {
+            lastCity.current = selectedCity.value
+            getForecast(selectedCity)
+        }
+    }, [selectedCity, getForecast, retry])
+
+    const triggerRetry = () => setRetry((prev) => prev + 1)
+
+    return {
+        data,
+        fetched,
+        fetching,
+        retry: triggerRetry
+    }
+}
 
 const ForecastDay = ({ display, min, max }) => {
     return (
@@ -30,8 +65,6 @@ const ForecastDay = ({ display, min, max }) => {
 
 export const Forecast = () => {
     const [selectedCity, setSelectedCity] = useState()
-    const [forecasts, setForecasts] = useState([])
-    const [isloading, setIsLoading] = useState(false)
 
     const loadOptions = async (city, callback) => {
         const $cities = await getCities(city)
@@ -55,20 +88,12 @@ export const Forecast = () => {
         ))
     }
 
-    const fetchForecast = async(selectedCity) => {
-        const { lat, long } = selectedCity;
-        setForecasts([])
-        setIsLoading(true)
-        const $forecasts = await getForeCast({ lat, long })
-        setForecasts($forecasts)
-        setIsLoading(false)
-    }
-
-    useEffect(() => {
-        if (selectedCity) {
-            fetchForecast(selectedCity)
-        }
-    }, [selectedCity])
+    const {
+        data: forecasts,
+        fetched,
+        fetching,
+        retry
+    } = useGetForecast(selectedCity)
 
     return (
         <div className='h-full flex flex-row'>
@@ -79,7 +104,13 @@ export const Forecast = () => {
                     <span className='text-lg'>Ingresa tu destino para ver el pronóstico del clima.</span>
                 </div>
                 <div className='mt-4'>
-                    <AsyncSelect cacheOptions loadOptions={loadOptions} onChange={setSelectedCity} placeholder="Ej: Monterrey, Guadalajara, Saltillo" />
+                    <AsyncSelect
+                        cacheOptions
+                        loadOptions={loadOptions}
+                        onChange={setSelectedCity}
+                        placeholder="Ej: Monterrey, Guadalajara, Saltillo" 
+                        noOptionsMessage={() => 'No se encontraron resultados'}
+                    />
                 </div>
             </div>
            
@@ -90,23 +121,40 @@ export const Forecast = () => {
                     </div>
                     <GridLoader
                         color={"#d1d5db"}
-                        loading={isloading}
+                        loading={fetching}
                         size={30}
                         aria-label="Loading Spinner"
                         data-testid="loader"
                         className='mt-16 mx-auto'
                     />
-                    <div className='w-full grid grid-cols-5 gap-4 mt-8'>
-                        {forecasts && forecasts.map((forecast) => {
-                            const { dt, display, min, max } = forecast
+                    {fetched && !fetching && forecasts.length === 0 && (
+                            <div className='flex flex-col items-center mt-12'>
+                                <div className='text-xl'>Hubo un problema, por favor intenta nuevamente.</div>
+                                <button
+                                    onClick={() => {
+                                        retry()
+                                    }}
+                                    className='mt-4 border-gray-200 border px-4 py-2 rounded-md bg-blue-400 hover:cursor-pointer hover:bg-blue-500'
+                                >
+                                    Volver a intentar
+                                </button>
+                            </div>
+                        )
+                    }
+                    {forecasts.length > 0 && (
+                        <div className='w-full grid grid-cols-5 gap-4 mt-8'>
+                            {forecasts.map((forecast) => {
+                                const { dt, display, min, max } = forecast
 
-                            return (
-                                <div key={`forecast-${dt}`} className=''>
-                                    <ForecastDay display={display} min={min.toFixed(0)} max={max.toFixed(0)} />
-                                </div>
-                            )
-                        })}
-                    </div>
+                                return (
+                                    <div key={`forecast-${dt}`} className=''>
+                                        <ForecastDay display={display} min={min.toFixed(0)} max={max.toFixed(0)} />
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        )
+                    }
                 </div>
             )}
         </div>
